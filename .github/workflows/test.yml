@@ -22,9 +22,7 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
-          - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: ubuntu-latest
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
@@ -54,11 +52,8 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
             playwright: bunx playwright install --with-deps
-          - name: windows
-            host: blacksmith-4vcpu-windows-2025
-            playwright: bunx playwright install
     runs-on: ${{ matrix.settings.host }}
     env:
       PLAYWRIGHT_BROWSERS_PATH: 0
