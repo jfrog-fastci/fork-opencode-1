@@ -69,9 +69,35 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: "Restore APT cache"
+        id: apt-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-cache
+          key: apt-${{ runner.os }}-test
+          restore-keys: |
+            apt-${{ runner.os }}-
+
+      - name: "Setup local APT repository from cache"
+        if: steps.apt-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Cache hit - setting up local APT repository..."
+          
+          if [ -d ~/apt-cache ] && ls ~/apt-cache/*.deb 1>/dev/null 2>&1; then
+            sudo cp ~/apt-cache/*.deb /var/cache/apt/archives
+          fi
+
       - name: Install Playwright browsers
         working-directory: packages/app
         run: ${{ matrix.settings.playwright }}
+
+      - name: "Save packages to cache directory"
+        if: steps.apt-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Saving downloaded .deb packages to cache..."
+          mkdir -p ~/apt-cache
+          sudo cp /var/cache/apt/archives/*.deb ~/apt-cache/ 2>/dev/null || true
+          echo "Cached $(ls ~/apt-cache/*.deb 2>/dev/null | wc -l) packages"
 
       - name: Run app e2e tests
         run: bun --cwd packages/app test:e2e:local
